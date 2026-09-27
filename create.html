@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Create Video — VidzAI</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <header class="creator-header">
+
+        <a href="index.html" class="brand">
+            Vidz<span>AI</span>
+        </a>
+
+        <div class="creator-account">
+            <div id="userAvatar" class="user-avatar">P</div>
+        </div>
+
+    </header>
+
+
+    <main class="creator-page">
+
+        <section class="creator-intro">
+
+            <h1>Create your AI video</h1>
+
+            <p>
+                Turn your ideas, images and stories into animated videos.
+            </p>
+
+        </section>
+
+
+        <!-- VIDEO TYPE -->
+
+        <section class="creator-card">
+
+            <h2>Choose a video style</h2>
+
+            <div class="style-grid">
+
+                <button class="style-option active" data-style="3D Cartoon">
+                    <strong>3D Cartoon</strong>
+                    <span>Animated characters and scenes</span>
+                </button>
+
+                <button class="style-option" data-style="Cinematic">
+                    <strong>Cinematic</strong>
+                    <span>Movie-style AI scenes</span>
+                </button>
+
+                <button class="style-option" data-style="Animation">
+                    <strong>Animation</strong>
+                    <span>Creative animated stories</span>
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- IMAGE -->
+
+        < class="creator-card">
+
+            <h2>Add your character</h2>
+
+            <p class="section-description">
+                Upload an image that you want to use in your video.
+            </p>
+
+            <!-- IMAGE — OPTIONAL -->
+
+<section class="creator-card">
+
+    <h2>Add an image <span>(optional)</span></h2>
+
+    <p class="section-description">
+        Upload an image if you want to animate it.
+        You can also leave this empty and create your video from your prompt alone.
+    </p>
+
+    <label class="upload-box" for="characterImage">
+
+        <span class="upload-icon">+</span>
+
+        <strong>Upload image</strong>
+
+        <small>
+            JPG, PNG or WEBP
+        </small>
+
+    </label>
+
+    <input
+        type="file"
+        id="characterImage"
+        accept="image/png,image/jpeg,image/webp"
+        hidden
+    >
+
+    <div id="imagePreview" class="image-preview"></div>
+
+</section>
+
+
+        <!-- STORY -->
+
+        <section class="creator-card">
+
+            <h2>Describe your video</h2>
+
+            <p class="section-description">
+                Tell VidzAI what you want your characters to do.
+            </p>
+
+            <textarea
+                id="videoPrompt"
+                placeholder="Example: A young boy walks slowly through a beautiful village, looks at his friend and begins talking..."
+            ></textarea>
+
+        </section>
+
+
+        <!-- SETTINGS -->
+
+        <section class="creator-card">
+
+            <h2>Video settings</h2>
+
+            <div class="settings-grid">
+
+                <div class="setting">
+
+                    <label for="duration">
+                        Duration
+                    </label>
+
+                    <select id="duration">
+
+                        <option value="5">5 seconds</option>
+<option value="10" selected>10 seconds</option>
+<option value="15">15 seconds</option>
+<option value="30">30 seconds</option>
+<option value="60">60 seconds</option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="setting">
+
+                    <label for="aspectRatio">
+                        Aspect ratio
+                    </label>
+
+                    <select id="aspectRatio">
+
+                        <option value="16:9">
+                            16:9 Landscape
+                        </option>
+
+                        <option value="9:16">
+                            9:16 Portrait
+                        </option>
+
+                        <option value="1:1">
+                            1:1 Square
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- GENERATE -->
+
+        <section class="generate-section">
+
+            <button id="generateBtn" class="generate-btn">
+                Generate video
+            </button>
+
+            <p id="generationMessage"></p>
+
+        </section>
+
+    </main>
+
+
+    <script type="module" src="js/create.js"></script>
+
+</body>
+</html>
