@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Create Account - Let Chat Up</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <main class="auth-page">
+
+        <div class="auth-card">
+
+            <img
+                src="image/let-chat-up.png"
+                alt="Let Chat Up"
+                class="small-logo"
+            >
+
+            <h1>Create Account</h1>
+
+            <p class="auth-subtitle">
+                Join Let Chat Up today.
+            </p>
+
+            <form id="registerForm">
+
+                <label for="fullName">
+                    Full Name
+                </label>
+
+                <input
+                    type="text"
+                    id="fullName"
+                    placeholder="Enter your full name"
+                    autocomplete="name"
+                    required
+                >
+
+                <label for="username">
+                    Username
+                </label>
+
+                <input
+                    type="text"
+                    id="username"
+                    placeholder="Choose a username"
+                    autocomplete="username"
+                    minlength="3"
+                    required
+                >
+
+                <small>
+                    3–20 characters. Letters, numbers and underscore only.
+                </small>
+
+                <label for="email">
+                    Email Address
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Enter your email"
+                    autocomplete="email"
+                    required
+                >
+
+                <label for="password">
+                    Password
+                </label>
+
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Create a strong password"
+                    autocomplete="new-password"
+                    required
+                >
+
+                <div id="passwordRequirements">
+
+                    <p id="length">✗ At least 8 characters</p>
+
+                    <p id="uppercase">✗ One uppercase letter</p>
+
+                    <p id="lowercase">✗ One lowercase letter</p>
+
+                    <p id="number">✗ One number</p>
+
+                    <p id="special">✗ One special character</p>
+
+                </div>
+
+                <label for="confirmPassword">
+                    Confirm Password
+                </label>
+
+                <input
+                    type="password"
+                    id="confirmPassword"
+                    placeholder="Enter password again"
+                    autocomplete="new-password"
+                    required
+                >
+
+                <p id="passwordMessage"></p>
+
+                <button
+                    type="submit"
+                    id="registerButton"
+                >
+                    Create Account
+                </button>
+
+                <p id="registerMessage"></p>
+
+            </form>
+
+            <p class="switch-page">
+                Already have an account?
+                <a href="login.html">Login</a>
+            </p>
+
+            <p class="security-note">
+                🔒 Your password is securely handled by
+                our authentication system.
+            </p>
+
+        </div>
+
+    </main>
+
+    <script type="module" src="js/register.js"></script>
+
+</body>
+</html>
