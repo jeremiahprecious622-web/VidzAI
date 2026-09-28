@@ -2,7 +2,7 @@ export default {
     async fetch(request, env) {
         const url = new URL(request.url);
 
-        // Video generation API
+        // API endpoint
         if (url.pathname === "/api/generate-video") {
             if (request.method !== "POST") {
                 return Response.json(
@@ -25,6 +25,7 @@ export default {
 
 async function generateVideo(request, env) {
     try {
+        // Read form data from the website
         const formData = await request.formData();
 
         const prompt = formData.get("prompt");
@@ -44,14 +45,15 @@ async function generateVideo(request, env) {
             );
         }
 
-        // Get secret from Cloudflare
+        // Get Runway API key from Cloudflare secret
         const apiKey = env.RUNWAYML_API_SECRET;
 
         if (!apiKey) {
             return Response.json(
                 {
                     success: false,
-                    message: "Runway API key has not been configured."
+                    message:
+                        "Runway API key has not been configured."
                 },
                 { status: 500 }
             );
@@ -61,47 +63,58 @@ async function generateVideo(request, env) {
         const finalPrompt =
             `${prompt.trim()}. Visual style: ${style}.`;
 
-        // Gen-4.5 accepts 2–10 seconds.
+        // Runway Gen-4.5 supports 2–10 seconds
         const safeDuration = Math.min(
             Math.max(duration, 2),
             10
         );
 
-        // Runway API version 2024-11-06
-        // uses these Gen-4.5 dimensions.
+        // Runway request
         const runwayRequest = {
             model: "gen4.5",
             promptText: finalPrompt,
+
+            // Current supported Gen-4.5 sizes
             ratio:
                 ratio === "9:16"
-                    ? "768:1280"
-                    : "1280:768",
+                    ? "720:1280"
+                    : "1280:720",
+
             duration: safeDuration
         };
 
 
-        // Optional image
+        // ------------------------------------------------
+        // OPTIONAL IMAGE
+        // ------------------------------------------------
+
         if (
             image &&
             typeof image !== "string" &&
             image.size > 0
         ) {
-            // Maximum 4 MB
-            if (image.size > 4 * 1024 * 1024) {
+
+            // Keep the original image small enough
+            // for Runway's data-URI limit.
+            if (image.size > 3 * 1024 * 1024) {
                 return Response.json(
                     {
                         success: false,
                         message:
-                            "The uploaded image is too large. Please use an image under 4 MB."
+                            "The uploaded image is too large. Please use an image under 3 MB."
                     },
                     { status: 400 }
                 );
             }
 
-            const imageBuffer = await image.arrayBuffer();
-            const bytes = new Uint8Array(imageBuffer);
+            const imageBuffer =
+                await image.arrayBuffer();
+
+            const bytes =
+                new Uint8Array(imageBuffer);
 
             let binary = "";
+
             const chunkSize = 0x8000;
 
             for (
@@ -127,7 +140,10 @@ async function generateVideo(request, env) {
         }
 
 
-        // Send request to Runway
+        // ------------------------------------------------
+        // SEND REQUEST TO RUNWAY
+        // ------------------------------------------------
+
         const response = await fetch(
             "https://api.dev.runwayml.com/v1/image_to_video",
             {
@@ -135,17 +151,24 @@ async function generateVideo(request, env) {
 
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${apiKey}`,
-                    "X-Runway-Version": "2024-11-06"
+
+                    "Authorization":
+                        `Bearer ${apiKey}`,
+
+                    "X-Runway-Version":
+                        "2024-11-06"
                 },
 
-                body: JSON.stringify(runwayRequest)
+                body: JSON.stringify(
+                    runwayRequest
+                )
             }
         );
 
 
-        // Read Runway response
-        const responseText = await response.text();
+        // Read Runway's response
+        const responseText =
+            await response.text();
 
         let result = {};
 
@@ -154,43 +177,84 @@ async function generateVideo(request, env) {
                 ? JSON.parse(responseText)
                 : {};
         } catch {
-            result = {};
+            result = {
+                rawResponse: responseText
+            };
         }
 
 
-        // Runway rejected the request
+        // ------------------------------------------------
+        // RUNWAY ERROR
+        // ------------------------------------------------
+
         if (!response.ok) {
+
             console.error(
                 "Runway API error:",
                 response.status,
                 result
             );
 
+            // Return the REAL Runway error
+            // so we can see exactly what is wrong.
             return Response.json(
                 {
                     success: false,
+
                     message:
-                        result?.error ||
-                        result?.message ||
-                        result?.details ||
-                        `Runway rejected the request (${response.status}).`
+                        "Runway rejected the request.",
+
+                    status:
+                        response.status,
+
+                    runwayError:
+                        result,
+
+                    sentRequest:
+                        {
+                            model:
+                                runwayRequest.model,
+
+                            ratio:
+                                runwayRequest.ratio,
+
+                            duration:
+                                runwayRequest.duration,
+
+                            hasImage:
+                                Boolean(
+                                    runwayRequest.promptImage
+                                )
+                        }
                 },
+
                 {
-                    status: response.status
+                    status:
+                        response.status
                 }
             );
         }
 
 
-        // Successful task creation
-        return Response.json({
-            success: true,
-            taskId: result.id,
-            message: "Video generation started."
-        });
+        // ------------------------------------------------
+        // SUCCESS
+        // ------------------------------------------------
+
+        return Response.json(
+            {
+                success: true,
+
+                taskId:
+                    result.id,
+
+                message:
+                    "Video generation started."
+            }
+        );
 
 
     } catch (error) {
+
         console.error(
             "Generate video error:",
             error
@@ -199,11 +263,15 @@ async function generateVideo(request, env) {
         return Response.json(
             {
                 success: false,
+
                 message:
                     error?.message ||
                     "Something went wrong while starting video generation."
             },
-            { status: 500 }
+
+            {
+                status: 500
+            }
         );
     }
-            }
+    }
