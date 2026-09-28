@@ -5,21 +5,37 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
 
-const userAvatar = document.getElementById("userAvatar");
-const characterImage = document.getElementById("characterImage");
-const imagePreview = document.getElementById("imagePreview");
-const videoPrompt = document.getElementById("videoPrompt");
-const duration = document.getElementById("duration");
-const aspectRatio = document.getElementById("aspectRatio");
-const generateBtn = document.getElementById("generateBtn");
-const generationMessage = document.getElementById("generationMessage");
+const userAvatar =
+    document.getElementById("userAvatar");
+
+const characterImage =
+    document.getElementById("characterImage");
+
+const imagePreview =
+    document.getElementById("imagePreview");
+
+const videoPrompt =
+    document.getElementById("videoPrompt");
+
+const duration =
+    document.getElementById("duration");
+
+const aspectRatio =
+    document.getElementById("aspectRatio");
+
+const generateBtn =
+    document.getElementById("generateBtn");
+
+const generationMessage =
+    document.getElementById("generationMessage");
+
 
 let currentUser = null;
 
 
-// ==============================
+// =====================================
 // CHECK LOGIN
-// ==============================
+// =====================================
 
 onAuthStateChanged(auth, (user) => {
 
@@ -48,18 +64,18 @@ onAuthStateChanged(auth, (user) => {
 
         userAvatar.textContent =
             name.charAt(0).toUpperCase();
-
     }
 
 });
 
 
-// ==============================
+// =====================================
 // VIDEO STYLE
-// ==============================
+// =====================================
 
 const styleOptions =
     document.querySelectorAll(".style-option");
+
 
 styleOptions.forEach((option) => {
 
@@ -76,16 +92,19 @@ styleOptions.forEach((option) => {
 });
 
 
-// ==============================
+// =====================================
 // IMAGE PREVIEW
-// ==============================
+// =====================================
 
 characterImage.addEventListener("change", () => {
 
-    const file = characterImage.files[0];
+    const file =
+        characterImage.files[0];
 
     if (!file) {
+
         imagePreview.innerHTML = "";
+
         return;
     }
 
@@ -102,222 +121,265 @@ characterImage.addEventListener("change", () => {
 });
 
 
-// ==============================
+// =====================================
 // GENERATE VIDEO
-// ==============================
+// =====================================
 
-generateBtn.addEventListener("click", async () => {
+generateBtn.addEventListener(
+    "click",
+    async () => {
 
-    if (!currentUser) {
+        // -------------------------------
+        // CHECK LOGIN
+        // -------------------------------
 
-        generationMessage.textContent =
-            "Please sign in first.";
+        if (!currentUser) {
 
-        return;
-    }
+            generationMessage.textContent =
+                "Please sign in first.";
 
-
-    const prompt =
-        videoPrompt.value.trim();
-
-    const imageFile =
-        characterImage.files[0];
-
-    const selectedStyle =
-        document.querySelector(".style-option.active");
-
-
-    // ==============================
-    // VALIDATION
-    // ==============================
-
-    if (!selectedStyle) {
-
-        generationMessage.textContent =
-            "Please choose a video style.";
-
-        return;
-    }
-
-
-    /*
-     * IMAGE IS OPTIONAL.
-     *
-     * The user can now:
-     *
-     * 1. Write a prompt only
-     *
-     * OR
-     *
-     * 2. Upload an image + write a prompt
-     */
-
-    if (!prompt) {
-
-        generationMessage.textContent =
-            "Please describe the video you want to create.";
-
-        videoPrompt.focus();
-
-        return;
-    }
-
-
-    const style =
-        selectedStyle.dataset.style;
-
-    const videoDuration =
-        Number(duration.value);
-
-    const ratio =
-        aspectRatio.value;
-
-
-    // ==============================
-    // BUTTON STATE
-    // ==============================
-
-    generateBtn.disabled = true;
-
-    generateBtn.textContent =
-        "Preparing video...";
-
-    generationMessage.textContent =
-        imageFile
-            ? "Preparing your image and prompt..."
-            : "Preparing your prompt...";
-
-
-    try {
-
-        const formData =
-            new FormData();
-
-
-        // Add image ONLY if the user selected one
-
-        if (imageFile) {
-
-            formData.append(
-                "image",
-                imageFile
-            );
-
+            return;
         }
 
 
-        formData.append(
-            "prompt",
-            prompt
-        );
+        // -------------------------------
+        // GET FORM VALUES
+        // -------------------------------
+
+        const prompt =
+            videoPrompt.value.trim();
+
+        const imageFile =
+            characterImage.files[0];
+
+        const selectedStyle =
+            document.querySelector(
+                ".style-option.active"
+            );
+
+        const style =
+            selectedStyle?.dataset.style ||
+            selectedStyle?.getAttribute("data-style") ||
+            selectedStyle?.textContent.trim() ||
+            "cinematic";
+
+        const selectedDuration =
+            duration?.value || "5";
+
+        const selectedRatio =
+            aspectRatio?.value || "16:9";
 
 
-        formData.append(
-            "style",
-            style
-        );
+        // -------------------------------
+        // CHECK PROMPT
+        // -------------------------------
+
+        if (!prompt) {
+
+            generationMessage.textContent =
+                "Please enter a video prompt.";
+
+            return;
+        }
 
 
-        formData.append(
-            "duration",
-            videoDuration
-        );
+        // -------------------------------
+        // SHOW LOADING
+        // -------------------------------
 
+        generateBtn.disabled = true;
 
-        formData.append(
-            "ratio",
-            ratio
-        );
-
-
-        formData.append(
-            "userId",
-            currentUser.uid
-        );
-
+        generateBtn.textContent =
+            "Generating...";
 
         generationMessage.textContent =
-            "Sending your video request...";
+            "Starting video generation...";
 
 
-        /*
-         * Our secure backend will handle
-         * the actual AI video generation.
-         */
+        try {
 
-        const response =
-            await fetch(
-                "/api/generate-video",
-                {
-                    method: "POST",
-                    body: formData
-                }
+            // ---------------------------
+            // CREATE FORM DATA
+            // ---------------------------
+
+            const formData =
+                new FormData();
+
+            formData.append(
+                "prompt",
+                prompt
+            );
+
+            formData.append(
+                "style",
+                style
+            );
+
+            formData.append(
+                "duration",
+                selectedDuration
+            );
+
+            formData.append(
+                "ratio",
+                selectedRatio
             );
 
 
-        if (!response.ok) {
-    let errorMessage = `Video service error (${response.status})`;
+            // ---------------------------
+            // IMAGE IS OPTIONAL
+            // ---------------------------
 
-    try {
-        const errorData = await response.json();
+            if (imageFile) {
 
-        errorMessage =
-            errorData.message ||
-            errorData.error ||
-            errorMessage;
-    } catch {
-        // Keep the status message if the response isn't JSON
-    }
-
-    throw new Error(errorMessage);
+                formData.append(
+                    "image",
+                    imageFile
+                );
             }
 
 
-        const result =
-            await response.json();
+            // ---------------------------
+            // SEND TO CLOUDFLARE WORKER
+            // ---------------------------
+
+            const response =
+                await fetch(
+                    "/api/generate-video",
+                    {
+                        method: "POST",
+                        body: formData
+                    }
+                );
 
 
-        if (!result.success) {
+            // ---------------------------
+            // READ RESPONSE
+            // ---------------------------
 
-            throw new Error(
-                result.message ||
-                "Video generation failed."
+            const responseText =
+                await response.text();
+
+            let result = {};
+
+            try {
+
+                result =
+                    responseText
+                        ? JSON.parse(
+                            responseText
+                        )
+                        : {};
+
+            } catch {
+
+                result = {
+                    rawResponse:
+                        responseText
+                };
+
+            }
+
+
+            console.log(
+                "VidzAI response:",
+                result
             );
+
+
+            // ---------------------------
+            // SERVER ERROR
+            // ---------------------------
+
+            if (!response.ok) {
+
+                let errorMessage =
+                    result.message ||
+                    "Video generation failed.";
+
+
+                // Show Runway's actual error
+                if (result.runwayError) {
+
+                    errorMessage +=
+                        "\n\nRunway details:\n" +
+                        JSON.stringify(
+                            result.runwayError,
+                            null,
+                            2
+                        );
+                }
+
+
+                generationMessage.textContent =
+                    errorMessage;
+
+                return;
+            }
+
+
+            // ---------------------------
+            // GENERATION FAILED
+            // ---------------------------
+
+            if (!result.success) {
+
+                generationMessage.textContent =
+                    result.message ||
+                    "Video generation failed.";
+
+                return;
+            }
+
+
+            // ---------------------------
+            // SUCCESS
+            // ---------------------------
+
+            generationMessage.textContent =
+                "Video generation started.";
+
+
+            console.log(
+                "Runway task ID:",
+                result.taskId
+            );
+
+
+            // Save task ID temporarily
+            if (result.taskId) {
+
+                localStorage.setItem(
+                    "vidzaiTaskId",
+                    result.taskId
+                );
+
+            }
+
+
+        } catch (error) {
+
+            console.error(
+                "VidzAI generation error:",
+                error
+            );
+
+            generationMessage.textContent =
+                error?.message ||
+                "Could not connect to the video generation service.";
+
+        } finally {
+
+            // ---------------------------
+            // RESTORE BUTTON
+            // ---------------------------
+
+            generateBtn.disabled = false;
+
+            generateBtn.textContent =
+                "Generate Video";
 
         }
 
-
-        generationMessage.textContent =
-            "Your video is being generated.";
-
-
-        generateBtn.textContent =
-            "Generation started";
-
-
-        console.log(
-            "Video task:",
-            result.taskId
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "Video generation error:",
-            error
-        );
-
-
-        generationMessage.textContent =
-            error.message;
-
-
-        generateBtn.disabled = false;
-
-        generateBtn.textContent =
-            "Generate video";
-
     }
-
-});
+);
