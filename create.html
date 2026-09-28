@@ -1,140 +1,465 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Create Video — VidzAI</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <link rel="stylesheet" href="css/style.css">
+    <meta
+        name="theme-color"
+        content="#080b24"
+    >
+
+    <title>VidzAI — Create</title>
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #080b24;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+        }
+
+        .create-page {
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        /* HEADER */
+
+        .create-header {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 22px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            background: rgba(8,11,36,0.95);
+        }
+
+        .brand {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .brand span {
+            color: #7c5cff;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #171b3d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+
+        /* MAIN */
+
+        .create-container {
+            width: min(1100px, 94%);
+            margin: 30px auto;
+        }
+
+        .page-title {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            color: #aeb3cf;
+            margin-bottom: 28px;
+        }
+
+
+        /* WORKSPACE */
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+        }
+
+        .panel {
+            background: #101432;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 18px;
+            padding: 22px;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+
+
+        /* PROMPT */
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            resize: vertical;
+            background: #080b24;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            padding: 15px;
+            outline: none;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        textarea:focus {
+            border-color: #7c5cff;
+        }
+
+
+        /* UPLOAD */
+
+        .upload-box {
+            border: 1px dashed rgba(255,255,255,0.2);
+            border-radius: 14px;
+            padding: 22px;
+            text-align: center;
+            margin-top: 18px;
+            background: #0b0f2c;
+        }
+
+        .upload-box p {
+            color: #aeb3cf;
+            font-size: 14px;
+        }
+
+        .upload-box input {
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        #imagePreview {
+            margin-top: 15px;
+        }
+
+        #imagePreview img {
+            max-width: 100%;
+            max-height: 220px;
+            border-radius: 12px;
+        }
+
+
+        /* STYLE OPTIONS */
+
+        .style-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .style-option {
+            padding: 14px;
+            border-radius: 11px;
+            background: #080b24;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #dfe2f5;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .style-option:hover {
+            border-color: #7c5cff;
+        }
+
+        .style-option.active {
+            background: #191642;
+            border-color: #7c5cff;
+        }
+
+
+        /* SETTINGS */
+
+        .setting {
+            margin-top: 18px;
+        }
+
+        .setting label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #b8bdd8;
+        }
+
+        select {
+            width: 100%;
+            padding: 13px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: #080b24;
+            color: white;
+            outline: none;
+        }
+
+
+        /* GENERATE */
+
+        .generate-btn {
+            width: 100%;
+            margin-top: 24px;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(
+                135deg,
+                #7c5cff,
+                #5c8cff
+            );
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .generate-btn:hover {
+            opacity: 0.92;
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+
+        /* PREVIEW */
+
+        .preview-area {
+            min-height: 390px;
+            border-radius: 15px;
+            background: #07091c;
+            border: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-placeholder {
+            text-align: center;
+            color: #777d9e;
+            padding: 30px;
+        }
+
+        .preview-placeholder strong {
+            display: block;
+            color: #dfe2f5;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        #animationPreview {
+            width: 100%;
+            height: 100%;
+            min-height: 390px;
+            position: absolute;
+            inset: 0;
+            display: none;
+            overflow: hidden;
+        }
+
+
+        /* MESSAGE */
+
+        #generationMessage {
+            margin-top: 15px;
+            color: #b8bdd8;
+            white-space: pre-wrap;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+
+        /* RESPONSIVE */
+
+        @media (max-width: 750px) {
+
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title {
+                font-size: 27px;
+            }
+
+            .preview-area {
+                min-height: 300px;
+            }
+
+            #animationPreview {
+                min-height: 300px;
+            }
+
+        }
+
+    </style>
+
 </head>
+
 
 <body>
 
-    <header class="creator-header">
+<div class="create-page">
 
-        <a href="index.html" class="brand">
+
+    <!-- HEADER -->
+
+    <header class="create-header">
+
+        <div class="brand">
             Vidz<span>AI</span>
-        </a>
+        </div>
 
-        <div class="creator-account">
-            <div id="userAvatar" class="user-avatar">P</div>
+        <div
+            id="userAvatar"
+            class="user-avatar"
+        >
+            U
         </div>
 
     </header>
 
 
-    <main class="creator-page">
 
-        <section class="creator-intro">
+    <!-- MAIN -->
 
-            <h1>Create your AI video</h1>
+    <main class="create-container">
 
-            <p>
-                Turn your ideas, images and stories into animated videos.
-            </p>
+        <h1 class="page-title">
+            Create your video
+        </h1>
 
-        </section>
-
-
-        <!-- VIDEO TYPE -->
-
-        <section class="creator-card">
-
-            <h2>Choose a video style</h2>
-
-            <div class="style-grid">
-
-                <button class="style-option active" data-style="3D Cartoon">
-                    <strong>3D Cartoon</strong>
-                    <span>Animated characters and scenes</span>
-                </button>
-
-                <button class="style-option" data-style="Cinematic">
-                    <strong>Cinematic</strong>
-                    <span>Movie-style AI scenes</span>
-                </button>
-
-                <button class="style-option" data-style="Animation">
-                    <strong>Animation</strong>
-                    <span>Creative animated stories</span>
-                </button>
-
-            </div>
-
-        </section>
+        <p class="page-subtitle">
+            Turn your ideas into animated scenes.
+        </p>
 
 
-        <!-- IMAGE -->
 
-        < class="creator-card">
-
-            <h2>Add your character</h2>
-
-            <p class="section-description">
-                Upload an image that you want to use in your video.
-            </p>
-
-            <!-- IMAGE — OPTIONAL -->
-
-<section class="creator-card">
-
-    <h2>Add an image <span>(optional)</span></h2>
-
-    <p class="section-description">
-        Upload an image if you want to animate it.
-        You can also leave this empty and create your video from your prompt alone.
-    </p>
-
-    <label class="upload-box" for="characterImage">
-
-        <span class="upload-icon">+</span>
-
-        <strong>Upload image</strong>
-
-        <small>
-            JPG, PNG or WEBP
-        </small>
-
-    </label>
-
-    <input
-        type="file"
-        id="characterImage"
-        accept="image/png,image/jpeg,image/webp"
-        hidden
-    >
-
-    <div id="imagePreview" class="image-preview"></div>
-
-</section>
+        <div class="workspace">
 
 
-        <!-- STORY -->
+            <!-- LEFT PANEL -->
 
-        <section class="creator-card">
+            <section class="panel">
 
-            <h2>Describe your video</h2>
-
-            <p class="section-description">
-                Tell VidzAI what you want your characters to do.
-            </p>
-
-            <textarea
-                id="videoPrompt"
-                placeholder="Example: A young boy walks slowly through a beautiful village, looks at his friend and begins talking..."
-            ></textarea>
-
-        </section>
+                <div class="panel-title">
+                    Describe your scene
+                </div>
 
 
-        <!-- SETTINGS -->
+                <textarea
+                    id="videoPrompt"
+                    placeholder="Describe what you want to see...
 
-        <section class="creator-card">
+Example:
+A young boy walks slowly through a beautiful forest at sunset. The camera follows him from behind while the trees move gently in the wind."
+                ></textarea>
 
-            <h2>Video settings</h2>
 
-            <div class="settings-grid">
+
+                <!-- IMAGE -->
+
+                <div class="upload-box">
+
+                    <strong>
+                        Add an image
+                    </strong>
+
+                    <p>
+                        Optional. Upload a character,
+                        object, or reference image.
+                    </p>
+
+                    <input
+                        type="file"
+                        id="characterImage"
+                        accept="image/*"
+                    >
+
+                    <div id="imagePreview"></div>
+
+                </div>
+
+
+
+                <!-- STYLE -->
+
+                <div class="setting">
+
+                    <label>
+                        Animation style
+                    </label>
+
+                    <div class="style-options">
+
+                        <div
+                            class="style-option active"
+                            data-style="cinematic"
+                        >
+                            Cinematic
+                        </div>
+
+                        <div
+                            class="style-option"
+                            data-style="3d cartoon"
+                        >
+                            3D Cartoon
+                        </div>
+
+                        <div
+                            class="style-option"
+                            data-style="anime"
+                        >
+                            Anime
+                        </div>
+
+                        <div
+                            class="style-option"
+                            data-style="realistic"
+                        >
+                            Realistic
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- DURATION -->
 
                 <div class="setting">
 
@@ -144,16 +469,33 @@
 
                     <select id="duration">
 
-                        <option value="5">5 seconds</option>
-<option value="10" selected>10 seconds</option>
-<option value="15">15 seconds</option>
-<option value="30">30 seconds</option>
-<option value="60">60 seconds</option>
+                        <option value="5">
+                            5 seconds
+                        </option>
+
+                        <option value="10">
+                            10 seconds
+                        </option>
+
+                        <option value="15">
+                            15 seconds
+                        </option>
+
+                        <option value="30">
+                            30 seconds
+                        </option>
+
+                        <option value="60">
+                            60 seconds
+                        </option>
 
                     </select>
 
                 </div>
 
+
+
+                <!-- RATIO -->
 
                 <div class="setting">
 
@@ -164,42 +506,90 @@
                     <select id="aspectRatio">
 
                         <option value="16:9">
-                            16:9 Landscape
+                            Landscape 16:9
                         </option>
 
                         <option value="9:16">
-                            9:16 Portrait
+                            Portrait 9:16
                         </option>
 
                         <option value="1:1">
-                            1:1 Square
+                            Square 1:1
                         </option>
 
                     </select>
 
                 </div>
 
-            </div>
-
-        </section>
 
 
-        <!-- GENERATE -->
+                <!-- GENERATE -->
 
-        <section class="generate-section">
+                <button
+                    id="generateBtn"
+                    class="generate-btn"
+                >
+                    Generate Animation
+                </button>
 
-            <button id="generateBtn" class="generate-btn">
-                Generate video
-            </button>
 
-            <p id="generationMessage"></p>
+                <div
+                    id="generationMessage"
+                ></div>
 
-        </section>
+            </section>
+
+
+
+
+            <!-- RIGHT PANEL -->
+
+            <section class="panel">
+
+                <div class="panel-title">
+                    Preview
+                </div>
+
+
+                <div class="preview-area">
+
+                    <div
+                        id="previewPlaceholder"
+                        class="preview-placeholder"
+                    >
+
+                        <strong>
+                            Your animation will appear here
+                        </strong>
+
+                        <span>
+                            Enter a prompt and generate a scene.
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        id="animationPreview"
+                    ></div>
+
+                </div>
+
+            </section>
+
+
+        </div>
 
     </main>
 
+</div>
 
-    <script type="module" src="js/create.js"></script>
+
+<script
+    type="module"
+    src="js/create.js"
+></script>
 
 </body>
-</html>
+
+    </html>
