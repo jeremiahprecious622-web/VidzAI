@@ -1455,4 +1455,80 @@ style.textContent = `
 
 /* GENERATION */
 
-.generation-ove
+.generation-overlay {
+
+    position:absolute;
+
+    inset:0;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:15px;
+
+    background:
+        rgba(0,0,0,.45);
+
+    backdrop-filter:blur(5px);
+
+    color:white;
+
+    z-index:100;
+
+}
+
+.generation-spinner {
+
+    width:40px;
+
+    height:40px;
+
+    border:
+        3px solid
+        rgba(255,255,255,.25);
+
+    border-top-color:white;
+
+    border-radius:50%;
+
+    animation:
+        spin
+        1s
+        linear
+        infinite;
+
+}
+
+@keyframes spin {
+
+    to {
+        transform:rotate(360deg);
+    }
+
+}
+
+.generation-success {
+
+    margin-top:12px;
+
+    padding:8px 14px;
+
+    border-radius:8px;
+
+    background:
+        rgba(30,160,90,.9);
+
+    color:white;
+
+    font-size:13px;
+
+}
+
+`;
+
+document.head.appendChild(style);
