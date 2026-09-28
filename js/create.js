@@ -256,12 +256,21 @@ generateBtn.addEventListener("click", async () => {
 
 
         if (!response.ok) {
+    let errorMessage = `Video service error (${response.status})`;
 
-            throw new Error(
-                "The video generation service is not connected yet."
-            );
+    try {
+        const errorData = await response.json();
 
-        }
+        errorMessage =
+            errorData.message ||
+            errorData.error ||
+            errorMessage;
+    } catch {
+        // Keep the status message if the response isn't JSON
+    }
+
+    throw new Error(errorMessage);
+            }
 
 
         const result =
