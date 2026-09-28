@@ -2,7 +2,12 @@ export default {
     async fetch(request, env) {
         const url = new URL(request.url);
 
+        // ==============================
+        // VIDEO GENERATION API
+        // ==============================
+
         if (url.pathname === "/api/generate-video") {
+
             if (request.method !== "POST") {
                 return Response.json(
                     {
@@ -16,17 +21,31 @@ export default {
             return generateVideo(request, env);
         }
 
+        // ==============================
+        // WEBSITE FILES
+        // ==============================
+
         return env.ASSETS.fetch(request);
     }
 };
 
 
+// ======================================================
+// GENERATE VIDEO
+// ======================================================
+
 async function generateVideo(request, env) {
+
     try {
+
+        // ----------------------------------------------
+        // READ FORM DATA
+        // ----------------------------------------------
 
         const formData = await request.formData();
 
         const prompt = formData.get("prompt");
+
         const style =
             formData.get("style") || "cinematic";
 
@@ -40,29 +59,32 @@ async function generateVideo(request, env) {
             formData.get("image");
 
 
-        // --------------------------------
+        // ----------------------------------------------
         // CHECK PROMPT
-        // --------------------------------
+        // ----------------------------------------------
 
         if (!prompt || !prompt.trim()) {
+
             return Response.json(
                 {
                     success: false,
-                    message: "Please provide a video prompt."
+                    message:
+                        "Please provide a video prompt."
                 },
                 { status: 400 }
             );
         }
 
 
-        // --------------------------------
-        // CHECK RUNWAY KEY
-        // --------------------------------
+        // ----------------------------------------------
+        // CHECK RUNWAY API KEY
+        // ----------------------------------------------
 
         const apiKey =
             env.RUNWAYML_API_SECRET;
 
         if (!apiKey) {
+
             return Response.json(
                 {
                     success: false,
@@ -74,17 +96,18 @@ async function generateVideo(request, env) {
         }
 
 
-        // --------------------------------
-        // PROMPT
-        // --------------------------------
+        // ----------------------------------------------
+        // CREATE FINAL PROMPT
+        // ----------------------------------------------
 
         const finalPrompt =
             `${prompt.trim()}. Visual style: ${style}.`;
 
 
-        // --------------------------------
-        // DURATION
-        // --------------------------------
+        // ----------------------------------------------
+        // SAFE DURATION
+        // Gen-4.5 = 2 to 10 seconds
+        // ----------------------------------------------
 
         const safeDuration =
             Math.min(
@@ -93,9 +116,9 @@ async function generateVideo(request, env) {
             );
 
 
-        // --------------------------------
-        // RATIO
-        // --------------------------------
+        // ----------------------------------------------
+        // SAFE RATIO
+        // ----------------------------------------------
 
         const safeRatio =
             ratio === "9:16"
@@ -103,21 +126,28 @@ async function generateVideo(request, env) {
                 : "1280:720";
 
 
-        // --------------------------------
-        // BUILD RUNWAY REQUEST
-        // --------------------------------
+        // ==================================================
+        // BUILD BASE REQUEST
+        // ==================================================
 
         const runwayRequest = {
+
             model: "gen4.5",
-            promptText: finalPrompt,
-            ratio: safeRatio,
-            duration: safeDuration
+
+            promptText:
+                finalPrompt,
+
+            ratio:
+                safeRatio,
+
+            duration:
+                safeDuration
         };
 
 
-        // --------------------------------
-        // IMAGE PROVIDED
-        // --------------------------------
+        // ==================================================
+        // IMAGE-TO-VIDEO MODE
+        // ==================================================
 
         if (
             image &&
@@ -125,10 +155,14 @@ async function generateVideo(request, env) {
             image.size > 0
         ) {
 
+            // Keep the uploaded file reasonably small
+            // because it will be converted to base64.
+
             if (
                 image.size >
                 3 * 1024 * 1024
             ) {
+
                 return Response.json(
                     {
                         success: false,
@@ -140,15 +174,26 @@ async function generateVideo(request, env) {
             }
 
 
+            // ------------------------------------------
+            // Convert image to ArrayBuffer
+            // ------------------------------------------
+
             const imageBuffer =
                 await image.arrayBuffer();
+
 
             const bytes =
                 new Uint8Array(imageBuffer);
 
+
+            // ------------------------------------------
+            // Convert bytes to binary string
+            // ------------------------------------------
+
             let binary = "";
 
             const chunkSize = 0x8000;
+
 
             for (
                 let i = 0;
@@ -169,18 +214,73 @@ async function generateVideo(request, env) {
             }
 
 
+            // ------------------------------------------
+            // Convert binary to Base64
+            // ------------------------------------------
+
             const base64 =
                 btoa(binary);
 
+
+            // ------------------------------------------
+            // Add image to Runway request
+            // ------------------------------------------
 
             runwayRequest.promptImage =
                 `data:${image.type};base64,${base64}`;
         }
 
 
-        // --------------------------------
-        // SEND TO RUNWAY
-        // --------------------------------
+        // ==================================================
+        // IMPORTANT:
+        //
+        // If there is NO image:
+        //     promptImage is NOT added.
+        //
+        // If there IS an image:
+        //     promptImage IS added.
+        //
+        // This allows Gen-4.5 to determine whether
+        // this is text-to-video or image-to-video.
+        // ==================================================
+
+
+        console.log(
+            "Runway request mode:",
+            image &&
+            typeof image !== "string" &&
+            image.size > 0
+                ? "IMAGE_TO_VIDEO"
+                : "TEXT_TO_VIDEO"
+        );
+
+
+        console.log(
+            "Runway request:",
+            {
+                model:
+                    runwayRequest.model,
+
+                promptText:
+                    runwayRequest.promptText,
+
+                ratio:
+                    runwayRequest.ratio,
+
+                duration:
+                    runwayRequest.duration,
+
+                hasPromptImage:
+                    Boolean(
+                        runwayRequest.promptImage
+                    )
+            }
+        );
+
+
+        // ==================================================
+        // SEND REQUEST TO RUNWAY
+        // ==================================================
 
         const response =
             await fetch(
@@ -189,6 +289,7 @@ async function generateVideo(request, env) {
                     method: "POST",
 
                     headers: {
+
                         "Content-Type":
                             "application/json",
 
@@ -207,14 +308,16 @@ async function generateVideo(request, env) {
             );
 
 
-        // --------------------------------
-        // READ RESPONSE
-        // --------------------------------
+        // ==================================================
+        // READ RUNWAY RESPONSE
+        // ==================================================
 
         const responseText =
             await response.text();
 
+
         let result = {};
+
 
         try {
 
@@ -226,15 +329,16 @@ async function generateVideo(request, env) {
         } catch {
 
             result = {
+
                 rawResponse:
                     responseText
             };
         }
 
 
-        // --------------------------------
-        // ERROR
-        // --------------------------------
+        // ==================================================
+        // RUNWAY ERROR
+        // ==================================================
 
         if (!response.ok) {
 
@@ -243,6 +347,7 @@ async function generateVideo(request, env) {
                 response.status,
                 result
             );
+
 
             return Response.json(
                 {
@@ -266,9 +371,15 @@ async function generateVideo(request, env) {
         }
 
 
-        // --------------------------------
+        // ==================================================
         // SUCCESS
-        // --------------------------------
+        // ==================================================
+
+        console.log(
+            "Runway task created:",
+            result.id
+        );
+
 
         return Response.json(
             {
@@ -285,10 +396,15 @@ async function generateVideo(request, env) {
 
     } catch (error) {
 
+        // ==================================================
+        // UNEXPECTED ERROR
+        // ==================================================
+
         console.error(
             "Generate video error:",
             error
         );
+
 
         return Response.json(
             {
@@ -304,4 +420,4 @@ async function generateVideo(request, env) {
             }
         );
     }
-}
+                    }
