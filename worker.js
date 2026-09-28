@@ -2,7 +2,6 @@ export default {
     async fetch(request, env) {
         const url = new URL(request.url);
 
-        // API endpoint
         if (url.pathname === "/api/generate-video") {
             if (request.method !== "POST") {
                 return Response.json(
@@ -17,7 +16,6 @@ export default {
             return generateVideo(request, env);
         }
 
-        // Serve the website
         return env.ASSETS.fetch(request);
     }
 };
@@ -25,16 +23,27 @@ export default {
 
 async function generateVideo(request, env) {
     try {
-        // Read form data from the website
+
         const formData = await request.formData();
 
         const prompt = formData.get("prompt");
-        const style = formData.get("style") || "cinematic";
-        const duration = Number(formData.get("duration")) || 5;
-        const ratio = formData.get("ratio") || "16:9";
-        const image = formData.get("image");
+        const style =
+            formData.get("style") || "cinematic";
 
-        // Check prompt
+        const duration =
+            Number(formData.get("duration")) || 5;
+
+        const ratio =
+            formData.get("ratio") || "16:9";
+
+        const image =
+            formData.get("image");
+
+
+        // --------------------------------
+        // CHECK PROMPT
+        // --------------------------------
+
         if (!prompt || !prompt.trim()) {
             return Response.json(
                 {
@@ -45,8 +54,13 @@ async function generateVideo(request, env) {
             );
         }
 
-        // Get Runway API key from Cloudflare secret
-        const apiKey = env.RUNWAYML_API_SECRET;
+
+        // --------------------------------
+        // CHECK RUNWAY KEY
+        // --------------------------------
+
+        const apiKey =
+            env.RUNWAYML_API_SECRET;
 
         if (!apiKey) {
             return Response.json(
@@ -59,34 +73,51 @@ async function generateVideo(request, env) {
             );
         }
 
-        // Build the prompt
+
+        // --------------------------------
+        // PROMPT
+        // --------------------------------
+
         const finalPrompt =
             `${prompt.trim()}. Visual style: ${style}.`;
 
-        // Runway Gen-4.5 supports 2–10 seconds
-        const safeDuration = Math.min(
-            Math.max(duration, 2),
-            10
-        );
 
-        // Runway request
+        // --------------------------------
+        // DURATION
+        // --------------------------------
+
+        const safeDuration =
+            Math.min(
+                Math.max(duration, 2),
+                10
+            );
+
+
+        // --------------------------------
+        // RATIO
+        // --------------------------------
+
+        const safeRatio =
+            ratio === "9:16"
+                ? "720:1280"
+                : "1280:720";
+
+
+        // --------------------------------
+        // BUILD RUNWAY REQUEST
+        // --------------------------------
+
         const runwayRequest = {
             model: "gen4.5",
             promptText: finalPrompt,
-
-            // Current supported Gen-4.5 sizes
-            ratio:
-                ratio === "9:16"
-                    ? "720:1280"
-                    : "1280:720",
-
+            ratio: safeRatio,
             duration: safeDuration
         };
 
 
-        // ------------------------------------------------
-        // OPTIONAL IMAGE
-        // ------------------------------------------------
+        // --------------------------------
+        // IMAGE PROVIDED
+        // --------------------------------
 
         if (
             image &&
@@ -94,9 +125,10 @@ async function generateVideo(request, env) {
             image.size > 0
         ) {
 
-            // Keep the original image small enough
-            // for Runway's data-URI limit.
-            if (image.size > 3 * 1024 * 1024) {
+            if (
+                image.size >
+                3 * 1024 * 1024
+            ) {
                 return Response.json(
                     {
                         success: false,
@@ -106,6 +138,7 @@ async function generateVideo(request, env) {
                     { status: 400 }
                 );
             }
+
 
             const imageBuffer =
                 await image.arrayBuffer();
@@ -122,70 +155,86 @@ async function generateVideo(request, env) {
                 i < bytes.length;
                 i += chunkSize
             ) {
-                binary += String.fromCharCode(
-                    ...bytes.subarray(
-                        i,
-                        Math.min(
-                            i + chunkSize,
-                            bytes.length
+
+                binary +=
+                    String.fromCharCode(
+                        ...bytes.subarray(
+                            i,
+                            Math.min(
+                                i + chunkSize,
+                                bytes.length
+                            )
                         )
-                    )
-                );
+                    );
             }
 
-            const base64 = btoa(binary);
+
+            const base64 =
+                btoa(binary);
+
 
             runwayRequest.promptImage =
                 `data:${image.type};base64,${base64}`;
         }
 
 
-        // ------------------------------------------------
-        // SEND REQUEST TO RUNWAY
-        // ------------------------------------------------
+        // --------------------------------
+        // SEND TO RUNWAY
+        // --------------------------------
 
-        const response = await fetch(
-            "https://api.dev.runwayml.com/v1/image_to_video",
-            {
-                method: "POST",
+        const response =
+            await fetch(
+                "https://api.dev.runwayml.com/v1/image_to_video",
+                {
+                    method: "POST",
 
-                headers: {
-                    "Content-Type": "application/json",
+                    headers: {
+                        "Content-Type":
+                            "application/json",
 
-                    "Authorization":
-                        `Bearer ${apiKey}`,
+                        "Authorization":
+                            `Bearer ${apiKey}`,
 
-                    "X-Runway-Version":
-                        "2024-11-06"
-                },
+                        "X-Runway-Version":
+                            "2024-11-06"
+                    },
 
-                body: JSON.stringify(
-                    runwayRequest
-                )
-            }
-        );
+                    body:
+                        JSON.stringify(
+                            runwayRequest
+                        )
+                }
+            );
 
 
-        // Read Runway's response
+        // --------------------------------
+        // READ RESPONSE
+        // --------------------------------
+
         const responseText =
             await response.text();
 
         let result = {};
 
         try {
-            result = responseText
-                ? JSON.parse(responseText)
-                : {};
+
+            result =
+                responseText
+                    ? JSON.parse(responseText)
+                    : {};
+
         } catch {
+
             result = {
-                rawResponse: responseText
+                rawResponse:
+                    responseText
             };
         }
 
 
-        // ------------------------------------------------
-        // RUNWAY ERROR
-        // ------------------------------------------------
+        // --------------------------------
+        // ERROR
+        // --------------------------------
 
         if (!response.ok) {
 
@@ -195,8 +244,6 @@ async function generateVideo(request, env) {
                 result
             );
 
-            // Return the REAL Runway error
-            // so we can see exactly what is wrong.
             return Response.json(
                 {
                     success: false,
@@ -208,24 +255,7 @@ async function generateVideo(request, env) {
                         response.status,
 
                     runwayError:
-                        result,
-
-                    sentRequest:
-                        {
-                            model:
-                                runwayRequest.model,
-
-                            ratio:
-                                runwayRequest.ratio,
-
-                            duration:
-                                runwayRequest.duration,
-
-                            hasImage:
-                                Boolean(
-                                    runwayRequest.promptImage
-                                )
-                        }
+                        result
                 },
 
                 {
@@ -236,9 +266,9 @@ async function generateVideo(request, env) {
         }
 
 
-        // ------------------------------------------------
+        // --------------------------------
         // SUCCESS
-        // ------------------------------------------------
+        // --------------------------------
 
         return Response.json(
             {
@@ -274,4 +304,4 @@ async function generateVideo(request, env) {
             }
         );
     }
-    }
+}
